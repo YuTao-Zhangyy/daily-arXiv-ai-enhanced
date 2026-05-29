@@ -16,18 +16,13 @@ jobs:
 
     steps:
     - uses: actions/checkout@v4
-      with:
-        token: ${{ secrets.GITHUB_TOKEN }}
-
     - name: Install dependencies
-      if: false
       run: |
         curl -LsSf https://astral.sh/uv/install.sh | sh
         uv sync
         
     - name: Crawl arXiv papers
       id: crawl_step
-      if: false
       run: |
         source .venv/bin/activate
         today=$(date -u "+%Y-%m-%d")
@@ -65,7 +60,6 @@ jobs:
         
     - name: Check for duplicates
       id: dedup_check
-      if: false
       run: |
         source .venv/bin/activate
         echo "执行去重检查... / Performing intelligent deduplication check..."
@@ -104,7 +98,7 @@ jobs:
         esac
         
     - name: AI Enhancement Processing
-      if: false && steps.dedup_check.outputs.has_new_content == 'true'
+      if: steps.dedup_check.outputs.has_new_content == 'true'
       run: |
         source .venv/bin/activate
         today=${{ steps.crawl_step.outputs.crawl_date }}
@@ -126,7 +120,7 @@ jobs:
         echo "AI增强处理完成 / AI enhancement processing completed"
         
     - name: Convert to Markdown
-      if: false && steps.dedup_check.outputs.has_new_content == 'true'
+      if: steps.dedup_check.outputs.has_new_content == 'true'
       run: |
         source .venv/bin/activate
         today=${{ steps.crawl_step.outputs.crawl_date }}
@@ -157,13 +151,13 @@ jobs:
         echo "Markdown转换完成 / Markdown conversion completed"
         
     - name: Update file list
-      if: false && steps.dedup_check.outputs.has_new_content == 'true'
+      if: steps.dedup_check.outputs.has_new_content == 'true'
       run: |
         echo "更新文件列表... / Updating file list..."
         ls data/*.jsonl | sed 's|data/||' > assets/file-list.txt
         echo "文件列表更新完成 / File list updated"
     - name: Generate password hash and inject into config
-      if: false && steps.dedup_check.outputs.has_new_content == 'true'
+      if: steps.dedup_check.outputs.has_new_content == 'true'
       run: |
         echo "🔐 Generating password hash for authentication..."
         PASSWORD="${{ secrets.ACCESS_PASSWORD }}"
@@ -191,7 +185,6 @@ jobs:
         fi
         echo "🔐 Authentication setup complete"
     - name: Summary
-      if: false
       run: |
         if [ "${{ steps.dedup_check.outputs.has_new_content }}" = "true" ]; then
           echo "✅ 工作流完成：去重发现新内容并成功处理 / Workflow completed: Smart deduplication found new content and processed successfully"
